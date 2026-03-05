@@ -3,6 +3,7 @@ import time
 import logging
 from dotenv import load_dotenv
 from docx import Document
+from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sqlite_vec import serialize_float32
 from mistralai import Mistral
@@ -78,9 +79,30 @@ def extract_text_from_docx(file_path: str) -> str:
     return "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
 
 
+def extract_text_from_pdf(file_path: str) -> str:
+    """Extract text from all pages of a PDF file."""
+    reader = PdfReader(file_path)
+    pages = [page.extract_text() or "" for page in reader.pages]
+    return "\n".join(pages)
+
+
+def extract_text(file_path: str) -> str:
+    """Auto-detect format and extract text from .docx, .pdf, or .txt files."""
+    ext = file_path.rsplit(".", 1)[-1].lower()
+    if ext == "docx":
+        return extract_text_from_docx(file_path)
+    elif ext == "pdf":
+        return extract_text_from_pdf(file_path)
+    elif ext == "txt":
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            return f.read()
+    else:
+        raise ValueError(f"Unsupported file format: .{ext}")
+
+
 def ingest_reference_document(file_path: str, doc_name: str, user_id: int):
-    """Chunk a .docx, embed each chunk, and store in sqlite-vec with user isolation."""
-    text = extract_text_from_docx(file_path)
+    """Chunk a document, embed each chunk, and store in sqlite-vec with user isolation."""
+    text = extract_text(file_path)
     splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
     chunks = splitter.split_text(text)
 

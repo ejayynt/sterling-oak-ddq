@@ -345,8 +345,8 @@
 
         <div class="upload-box" id="upload-box-refs">
             <h3>1. Upload Reference Documents</h3>
-            <p>Select .docx policy, compliance, or operational files.</p>
-            <input type="file" id="refFiles" multiple accept=".docx">
+            <p>Select .docx, .pdf, or .txt policy, compliance, or operational files.</p>
+            <input type="file" id="refFiles" multiple accept=".docx,.pdf,.txt">
             <button class="btn btn-primary" onclick="uploadReferences()" id="btn-refs">Ingest Context</button>
         </div>
 
@@ -593,7 +593,7 @@
                     <button class="btn btn-ghost btn-sm" onclick="regenerateAnswer(${item.id}, ${index})">↻ Regenerate</button>
                     <button class="toggle-snippet" onclick="toggleSnippet('snip-${item.id}', this)">▸ View Evidence</button>
                 </div>
-                <div id="snip-${item.id}" class="snippet">${escapeHtml(item.snippet)}</div>
+                <div id="snip-${item.id}" class="snippet"><strong style="color:var(--gold)">📄 ${escapeHtml(item.citation)}</strong><br><br>${escapeHtml(item.snippet)}</div>
             `;
             container.appendChild(card);
         });
