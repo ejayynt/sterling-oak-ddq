@@ -13,7 +13,7 @@ At its core, this is a RAG (Retrieval-Augmented Generation) pipeline wrapped in 
 The problem is simple: compliance teams receive long, structured questionnaires and need to answer each question using approved internal documentation. Doing this manually means opening 3-8 policy documents and hunting for the right paragraph for every single question. Sterling Oak DDQ Automator does that automatically.
 
 Here's how it works:
-- You upload your internal reference documents (policy files, compliance docs, operational guidelines) — the system chunks them and creates vector embeddings using Mistral's embedding API
+- You upload your internal reference documents (`.docx`, `.pdf`, or `.txt` — policy files, compliance docs, operational guidelines) — the system chunks them and creates vector embeddings using Mistral's embedding API
 - Each user's embeddings are stored separately, so there's full data isolation between accounts
 - When you upload a questionnaire (.docx with a two-column table), it parses out each question and runs a KNN similarity search against your reference chunks
 - The top matching chunks get passed to Mistral's LLM, which generates a concise, professional answer using only that context
@@ -62,7 +62,7 @@ flowchart TD
 ## Features
 
 - **User auth** — sign up and log in, each user's data is fully isolated
-- **Upload questionnaire + references** — `.docx` files, questionnaire must be a two-column table
+- **Upload questionnaire + references** — references accept `.docx`, `.pdf`, and `.txt`; questionnaire is a `.docx` two-column table
 - **AI-generated answers** — grounded in your documents, never made up
 - **Source citations** — every answer tells you which document it came from
 - **Confidence scores** — so you know how strongly the answer is supported
@@ -83,6 +83,7 @@ flowchart TD
 | Embeddings | Mistral AI — `mistral-embed` (1024 dims) |
 | Vector search | `sqlite-vec` (KNN via vec0 virtual table) |
 | Auth | `secrets.token_hex` + `passlib` (SHA-256 hashed passwords) |
+| Document parsing | `python-docx` + `pypdf` |
 | Export | `python-docx` |
 | Frontend | Single `index.html` — vanilla JS + CSS, no build step |
 
@@ -121,7 +122,7 @@ Open **http://localhost:8000** in your browser.
 ## Using the App
 
 1. **Sign up** on the login page
-2. **Upload your reference documents** — the `.docx` files that contain your source of truth (policy docs, compliance guidelines, etc.)
+2. **Upload your reference documents** — `.docx`, `.pdf`, or `.txt` files that contain your source of truth (policy docs, compliance guidelines, etc.)
 3. **Upload your questionnaire** — a `.docx` with a two-column table (questions in column 1, blank column 2)
 4. **Click Generate Answers** — takes about 10-15 seconds for 10 questions
 5. **Review the results** — each answer shows the source citation, confidence score, and an expandable evidence snippet
@@ -133,7 +134,7 @@ Open **http://localhost:8000** in your browser.
 ## Assumptions I Made
 
 - Questionnaires are `.docx` files with a two-column table (question | answer) — I kept this specific because the export needs to preserve the exact original structure
-- Reference documents are text-heavy `.docx` policy files — no complex tables or embedded images
+- Reference documents can be `.docx`, `.pdf`, or `.txt` — the system auto-detects format and extracts text accordingly
 - SQLite is fine for a demo — a real deployment would use PostgreSQL
 - Mistral's free API tier is sufficient — rate limits haven't been an issue with normal usage
 
@@ -150,7 +151,7 @@ Open **http://localhost:8000** in your browser.
 
 ## What I'd Improve With More Time
 
-- **PDF support** for both questionnaires and reference docs — most real compliance docs are PDFs
+- **PDF questionnaire parsing** — reference docs already support PDF, but parsing a PDF questionnaire into structured Q&A pairs would need layout-aware extraction
 - **Streaming answers** so results appear question by question instead of waiting for all of them
 - **Hybrid search** — combining vector similarity with BM25 keyword search would improve retrieval for exact acronyms and numbers
 - **Version history** — save timestamped snapshots so teams can compare answer sets across runs
